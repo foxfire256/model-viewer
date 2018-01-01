@@ -1,0 +1,12 @@
+
+._*
+*.bmp
+*.ttf
+build/*
+.idea/workspace.xml
+CMakeLists.txt.user
+*.autosave
+.idea/*.orig
+*.orig
+.idea/*.iml
+config_editor/build
