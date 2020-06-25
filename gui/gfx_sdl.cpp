@@ -5,7 +5,7 @@
 #include "events/message_resize.hpp"
 #include "events/message_framerate.hpp"
 
-#include "jds_counter.hpp"
+#include "fox/counter.hpp"
 #include "jds_font_sdl.hpp"
 #include "jds_gl_glew.h"
 #include "jds_shader.hpp"
@@ -32,8 +32,8 @@ gfx_sdl::gfx_sdl(events::manager_interface *emi)
 
 	rot_vel = 16.0f;
 	
-	fps_counter = new jds::counter();
-	update_counter = new jds::counter();
+	fps_counter = new fox::counter();
+	update_counter = new fox::counter();
 	s = NULL;
 	mesh = NULL;
 }
@@ -246,7 +246,7 @@ void gfx_sdl::init(int w, int h, const std::string &data_root)
 	this->data_root = data_root;
 	
 	// start SDL and create the window
-	init_sdl("tbsg2");
+	init_sdl("model-viewer");
 	
 	print_sdl_version();
 	

@@ -6,49 +6,50 @@ project(model-viewer)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include_directories("../common-cpp")
+include_directories("../common-cpp-old")
 
-# this assumes you are running cmake from a build directory in the source directory
-# cmake .. -G "Visual Studio 14 2015 Win64"
+# cmake .. -G "Visual Studio 16 2019" -A x64
 if(MSVC)
+	set(CMAKE_PREFIX_PATH "C:\\vclibs\\vclibs")
+	set(CMAKE_INCLUDE_PATH "C:\\vclibs\\vclibs\\include")
+	set(CMAKE_LIBRARY_PATH "C:\\vclibs\\vclibs\\lib")
 	ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE)
 	
-	#SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" " /MP")
-	#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" " /MP")
+	SET(CMAKE_C_FLAGS "/MP ${CMAKE_C_FLAGS}")
+	SET(CMAKE_CXX_FLAGS "/MP /std:c++17 /Oi ${CMAKE_CXX_FLAGS}")
 	
 	find_package(OpenGL REQUIRED)
 	find_library(OPENGL_LIBRARY NAMES OpenGL32 opengl32)
 	
 	set(LIBS ${LIBS} kernel32.lib)
 	set(SDL2_LIBS
-		optimized "C:\\vclibs\\vc2015libs\\lib\\SDL2main.lib"
-		debug "C:\\vclibs\\vc2015libs\\lib\\debug\\SDL2main.lib")
+		optimized "C:\\vclibs\\vclibs\\lib\\SDL2main.lib"
+		debug "C:\\vclibs\\vclibs\\lib\\SDL2maind.lib")
 	set(SDL2_LIBS ${SDL2_LIBS}
-		optimized "C:\\vclibs\\vc2015libs\\lib\\SDL2.lib"
-		debug "C:\\vclibs\\vc2015libs\\lib\\debug\\SDL2.lib")
+		optimized "C:\\vclibs\\vclibs\\lib\\SDL2.lib"
+		debug "C:\\vclibs\\vclibs\\lib\\SDL2d.lib")
 	set(GUI_LIBS ${SDL2_LIBS}
-		optimized "C:\\vclibs\\vc2015libs\\lib\\SDL2_ttf.lib"
-		debug "C:\\vclibs\\vc2015libs\\lib\\debug\\SDL2_ttf.lib")
+		optimized "C:\\vclibs\\vclibs\\lib\\SDL2_ttf.lib"
+		debug "C:\\vclibs\\vclibs\\lib\\SDL2_ttfd.lib")
 	set(GUI_LIBS ${GUI_LIBS}
-		optimized "C:\\vclibs\\vc2015libs\\lib\\glew32.lib"
-		debug "C:\\vclibs\\vc2015libs\\lib\\debug\\glew32d.lib")
+		optimized "C:\\vclibs\\vclibs\\lib\\glew32.lib"
+		debug "C:\\vclibs\\vclibs\\lib\\glew32d.lib")
 	set(GUI_LIBS ${GUI_LIBS} ${OPENGL_LIBRARY})
 	
 	set(PNG_LIBRARIES
-		optimized "C:\\vclibs\\vc2015libs\\lib\\libpng16.lib"
-		debug "C:\\vclibs\\vc2015libs\\lib\\debug\\libpng16d.lib")
+		optimized "C:\\vclibs\\vclibs\\lib\\libpng16.lib"
+		debug "C:\\vclibs\\vclibs\\lib\\libpng16d.lib")
 	
-	set(BOOST_LIBS ${BOOST_LIBS}
-		optimized "C:\\vclibs\\vc2015libs\\lib\\libboost_program_options-vc140-mt-1_60.lib"
-		debug "C:\\vclibs\\vc2015libs\\lib\\debug\\libboost_program_options-vc140-mt-gd-1_60.lib")
-	set(BOOST_LIBS ${BOOST_LIBS}
-		optimized "C:\\vclibs\\vc2015libs\\lib\\libboost_system-vc140-mt-1_60.lib"
-		debug "C:\\vclibs\\vc2015libs\\lib\\debug\\libboost_system-vc140-mt-gd-1_60.lib")
-	set(BOOST_LIBS ${BOOST_LIBS}
-		optimized "C:\\vclibs\\vc2015libs\\lib\\libboost_filesystem-vc140-mt-1_60.lib"
-		debug "C:\\vclibs\\vc2015libs\\lib\\debug\\libboost_filesystem-vc140-mt-gd-1_60.lib")
+	set(Boost_USE_STATIC_LIBS OFF )
+	set(Boost_USE_MULTITHREADED ON)
+	set(Boost_USE_STATIC_RUNTIME OFF)
 	
-	include_directories("C:\\vclibs\\vc2015libs\\include")
+	find_package(Boost COMPONENTS program_options system filesystem REQUIRED)
+	include_directories(${Boost_INCLUDE_DIRS})
+	set(BOOST_LIBS ${Boost_LIBRARIES})
+	
+	include_directories("C:\\vclibs\\vclibs\\include")
 endif(MSVC)
 
 if(MINGW OR MSYS)
@@ -191,36 +192,36 @@ set(MAIN_SOURCE
 	main_observer.cpp
 )
 set(COMMON_GUI_SOURCE
-	../common-cpp/jds_counter.hpp
-	../common-cpp/jds_counter.cpp
-	../common-cpp/jds_eigen_info.hpp
-	../common-cpp/jds_eigen_info.cpp
-	../common-cpp/jds_eigen_opengl.hpp
-	../common-cpp/jds_eigen_opengl.cpp
-	../common-cpp/jds_vertex_buffer_object.hpp
-	../common-cpp/jds_vertex_buffer_object.cpp
-	../common-cpp/jds_font.hpp
-	../common-cpp/jds_font.cpp
-	../common-cpp/jds_font_sdl.hpp
-	../common-cpp/jds_font_sdl.cpp
-	../common-cpp/jds_texture.hpp
-	../common-cpp/jds_texture.cpp
-	../common-cpp/jds_png.hpp
-	../common-cpp/jds_png.cpp
-	../common-cpp/jds_obj_model.h
-	../common-cpp/jds_obj_model.c
-	../common-cpp/jds_mesh.hpp
-	../common-cpp/jds_mesh.cpp
-	../common-cpp/jds_mesh_gfx.hpp
-	../common-cpp/jds_mesh_gfx.cpp
-	../common-cpp/jds_mesh_obj.hpp
-	../common-cpp/jds_mesh_obj.cpp
-	../common-cpp/jds_shader.hpp
-	../common-cpp/jds_shader.cpp
-	../common-cpp/jds_gl_glew.h
-	../common-cpp/jds_gl_glew.c
-	../common-cpp/sdl_message_handler.hpp
-	../common-cpp/sdl_message_handler.cpp
+	../common-cpp/fox/counter.hpp
+	../common-cpp/fox/counter.cpp
+	../common-cpp-old/jds_eigen_info.hpp
+	../common-cpp-old/jds_eigen_info.cpp
+	../common-cpp-old/jds_eigen_opengl.hpp
+	../common-cpp-old/jds_eigen_opengl.cpp
+	../common-cpp-old/jds_vertex_buffer_object.hpp
+	../common-cpp-old/jds_vertex_buffer_object.cpp
+	../common-cpp-old/jds_font.hpp
+	../common-cpp-old/jds_font.cpp
+	../common-cpp-old/jds_font_sdl.hpp
+	../common-cpp-old/jds_font_sdl.cpp
+	../common-cpp-old/jds_texture.hpp
+	../common-cpp-old/jds_texture.cpp
+	../common-cpp/fox/png_loader.hpp
+	../common-cpp/fox/png_loader.cpp
+	../common-cpp-old/jds_obj_model.h
+	../common-cpp-old/jds_obj_model.c
+	../common-cpp-old/jds_mesh.hpp
+	../common-cpp-old/jds_mesh.cpp
+	../common-cpp-old/jds_mesh_gfx.hpp
+	../common-cpp-old/jds_mesh_gfx.cpp
+	../common-cpp-old/jds_mesh_obj.hpp
+	../common-cpp-old/jds_mesh_obj.cpp
+	../common-cpp-old/jds_shader.hpp
+	../common-cpp-old/jds_shader.cpp
+	../common-cpp-old/jds_gl_glew.h
+	../common-cpp-old/jds_gl_glew.c
+	../common-cpp-old/sdl_message_handler.hpp
+	../common-cpp-old/sdl_message_handler.cpp
 )
 set(COMMON_EVENTS_SOURCE
 	../common-cpp/events/console_writer.hpp
@@ -239,6 +240,7 @@ set(COMMON_EVENTS_SOURCE
 	../common-cpp/events/message_mousewheel.hpp
 	../common-cpp/events/message_resize.hpp
 	../common-cpp/events/observer.hpp
+	../common-cpp/events/observer.cpp
 	../common-cpp/events/subject.hpp
 	../common-cpp/events/subject.cpp
 )

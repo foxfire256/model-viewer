@@ -8,9 +8,13 @@
 
 #include "events/observer.hpp"
 
-namespace jds
+namespace fox
 {
 	class counter;
+}
+
+namespace jds
+{
 	class shader;
 	class vertex_buffer_object;
 }
@@ -61,9 +65,9 @@ protected:
 	Eigen::Vector3f Ka, Ks, Kd;
 	float shininess;
 	
-	jds::counter *update_counter;
+	fox::counter *update_counter;
 	
-	jds::counter *fps_counter;
+	fox::counter *fps_counter;
 	double fps_time;
 	int frames, framerate;
 	float rot_vel;
