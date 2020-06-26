@@ -29,13 +29,10 @@ if(MSVC)
 	set(SDL2_LIBS ${SDL2_LIBS}
 		optimized "C:\\vclibs\\vclibs\\lib\\SDL2.lib"
 		debug "C:\\vclibs\\vclibs\\lib\\SDL2d.lib")
-	set(GUI_LIBS ${SDL2_LIBS}
-		optimized "C:\\vclibs\\vclibs\\lib\\SDL2_ttf.lib"
-		debug "C:\\vclibs\\vclibs\\lib\\SDL2_ttfd.lib")
 	set(GUI_LIBS ${GUI_LIBS}
 		optimized "C:\\vclibs\\vclibs\\lib\\glew32.lib"
 		debug "C:\\vclibs\\vclibs\\lib\\glew32d.lib")
-	set(GUI_LIBS ${GUI_LIBS} ${OPENGL_LIBRARY})
+	set(GUI_LIBS ${SDL2_LIBS} ${GUI_LIBS} ${OPENGL_LIBRARY})
 	
 	set(PNG_LIBRARIES
 		optimized "C:\\vclibs\\vclibs\\lib\\libpng16.lib"
@@ -59,66 +56,20 @@ if(MINGW OR MSYS)
 	
 	find_package(OpenGL REQUIRED)
 	find_library(OPENGL_LIBRARY NAMES OpenGL32 opengl32)
-	find_package(Freetype REQUIRED)
-	include_directories(${FREETYPE_INCLUDE_DIRS})
-	find_package(PNG REQUIRED)
-	include_directories(${PNG_INCLUDE_DIR})
 	find_package(Boost COMPONENTS program_options system filesystem REQUIRED)
 	include_directories(${Boost_INCLUDE_DIRS})
 	find_package(GLEW REQUIRED)
 	include_directories(${GLEW_INCLUDE_DIRS})
-	#find_package(OpenAL REQUIRED)
-	#include_directories(${OPENAL_INCLUDE_DIRS})
 	
 	set(BOOST_LIBS ${Boost_LIBRARIES})
 	set(LIBS ${LIBS} -lmingw32)
 	set(SDL2_LIBS -lSDL2main -lSDL2)
-	set(GUI_LIBS ${SDL2_LIBS} -lSDL2_ttf ${OPENGL_LIBRARY} ${GLEW_LIBRARIES})
-	set(SOUND_LIBS -lSDL2_mixer -lvorbis -logg -lz)
+	set(GUI_LIBS ${SDL2_LIBS} ${OPENGL_LIBRARY} ${GLEW_LIBRARIES})
 	
 	set(EDITOR_LIBS ${EDITOR_LIBS} -lmingw32)
 	
 	include_directories("c:/msys64/mingw64/include/eigen3")
 endif(MINGW OR MSYS)
-
-if(APPLE)
-	set(CMAKE_PREFIX_PATH "/usr/local")
-	set(CMAKE_INCLUDE_PATH "/usr/local/include")
-	set(CMAKE_LIBRARY_PATH "/usr/local/lib")
-	
-	find_package(OpenGL REQUIRED)
-	find_library(OPENGL_LIBRARY NAMES OpenGL)
-	find_package(Freetype REQUIRED)
-	include_directories(${FREETYPE_INCLUDE_DIRS})
-	find_package(PNG REQUIRED)
-	include_directories(${PNG_INCLUDE_DIR})
-	find_package(Boost COMPONENTS program_options system filesystem REQUIRED)
-	include_directories(${Boost_INCLUDE_DIRS})
-	find_package(GLEW REQUIRED)
-	include_directories(${GLEW_INCLUDE_DIRS})
-	find_package(OpenAL REQUIRED)
-	include_directories(${OPENAL_INCLUDE_DIRS})
-
-	INCLUDE(FindPkgConfig)
-
-	PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
-	include_directories(${SDL2_INCLUDE_DIR})
-
-	set(BOOST_LIBS ${Boost_LIBRARIES})
-	set(LIBS ${LIBS} -L/usr/local/lib)
-	set(SDL2_LIBS ${SDL2_LIBRARIES})
-	set(GUI_LIBS ${SDL2_LIBS} -lSDL2_ttf ${OPENGL_LIBRARY} ${GLEW_LIBRARIES})
-	set(SOUND_LIBS -lSDL2_mixer -lvorbis -logg -lz)
-
-	set(CMAKE_PREFIX_PATH "/usr/local")
-	set(CMAKE_INCLUDE_PATH "/usr/local/include")
-	set(CMAKE_LIBRARY_PATH "/usr/local/lib")
-
-	set(EDITOR_LIBS -L/usr/local/Cellar/qt5/5.6.1/lib)
-	
-	include_directories("/usr/local/include")
-	include_directories("/usr/local/include/eigen3")
-endif(APPLE)
 
 # this probably only works on Arch Linux
 if(UNIX AND NOT APPLE)
@@ -128,16 +79,10 @@ if(UNIX AND NOT APPLE)
 
 	find_package(OpenGL REQUIRED)
 	find_library(OPENGL_LIBRARY NAMES GL)
-	find_package(Freetype REQUIRED)
-	include_directories(${FREETYPE_INCLUDE_DIRS})
-	find_package(PNG REQUIRED)
-	include_directories(${PNG_INCLUDE_DIR})
 	find_package(Boost COMPONENTS program_options system filesystem REQUIRED)
 	include_directories(${Boost_INCLUDE_DIRS})
 	find_package(GLEW REQUIRED)
 	include_directories(${GLEW_INCLUDE_DIRS})
-	find_package(OpenAL REQUIRED)
-	include_directories(${OPENAL_INCLUDE_DIRS})
 
 	INCLUDE(FindPkgConfig)
 
@@ -147,8 +92,7 @@ if(UNIX AND NOT APPLE)
 	set(BOOST_LIBS ${Boost_LIBRARIES})
 	set(LIBS ${LIBS})
 	set(SDL2_LIBS ${SDL2_LIBRARIES})
-	set(GUI_LIBS ${SDL2_LIBS} -lSDL2_ttf ${OPENGL_LIBRARY} ${GLEW_LIBRARIES})
-	set(SOUND_LIBS -lSDL2_mixer -lvorbis -logg -lz)
+	set(GUI_LIBS ${SDL2_LIBS} ${OPENGL_LIBRARY} ${GLEW_LIBRARIES})
 
 	include_directories("/usr/include")
 	include_directories("/usr/include/eigen3")
@@ -166,46 +110,28 @@ if(NOT MSVC)
 	
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_C_FLAGS}")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CXX_FLAGS}")
-
-	#set(CMAKE_BUILD_TYPE "debug")
 endif(NOT MSVC)
 
 set(MAIN_SOURCE
 	main.cpp
 	main_observer.hpp
 	main_observer.cpp
+	sdl_message_handler.hpp
+	sdl_message_handler.cpp
 )
 set(COMMON_GUI_SOURCE
 	../common-cpp/fox/counter.hpp
 	../common-cpp/fox/counter.cpp
-	../common-cpp-old/jds_eigen_info.hpp
-	../common-cpp-old/jds_eigen_info.cpp
-	../common-cpp-old/jds_eigen_opengl.hpp
-	../common-cpp-old/jds_eigen_opengl.cpp
-	../common-cpp-old/jds_vertex_buffer_object.hpp
-	../common-cpp-old/jds_vertex_buffer_object.cpp
-	../common-cpp-old/jds_font.hpp
-	../common-cpp-old/jds_font.cpp
-	../common-cpp-old/jds_font_sdl.hpp
-	../common-cpp-old/jds_font_sdl.cpp
-	../common-cpp-old/jds_texture.hpp
-	../common-cpp-old/jds_texture.cpp
-	../common-cpp/fox/png_loader.hpp
-	../common-cpp/fox/png_loader.cpp
+	../common-cpp/fox/gfx/eigen_opengl.hpp
+	../common-cpp/fox/gfx/eigen_opengl.cpp
 	../common-cpp-old/jds_obj_model.h
 	../common-cpp-old/jds_obj_model.c
-	../common-cpp-old/jds_mesh.hpp
-	../common-cpp-old/jds_mesh.cpp
-	../common-cpp-old/jds_mesh_gfx.hpp
-	../common-cpp-old/jds_mesh_gfx.cpp
-	../common-cpp-old/jds_mesh_obj.hpp
-	../common-cpp-old/jds_mesh_obj.cpp
 	../common-cpp-old/jds_shader.hpp
 	../common-cpp-old/jds_shader.cpp
-	../common-cpp-old/jds_gl_glew.h
-	../common-cpp-old/jds_gl_glew.c
-	../common-cpp-old/sdl_message_handler.hpp
-	../common-cpp-old/sdl_message_handler.cpp
+	../common-cpp/fox/gfx/gl_glew.h
+	../common-cpp/fox/gfx/gl_glew.c
+	../common-cpp/fox/gfx/opengl_error_checker.h
+	../common-cpp/fox/gfx/opengl_error_checker.c
 )
 set(COMMON_EVENTS_SOURCE
 	../common-cpp/events/console_writer.hpp

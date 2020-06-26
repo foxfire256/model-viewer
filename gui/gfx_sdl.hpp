@@ -7,6 +7,7 @@
 #include <Eigen/Geometry>
 
 #include "events/observer.hpp"
+#include "fox/gfx/gl_glew.h"
 
 namespace fox
 {
@@ -60,8 +61,10 @@ protected:
 	
 	jds::shader *s;
 	struct JDS_OBJ_MODEL *mesh;
-	jds::vertex_buffer_object *fast_vert_vbo, *fast_norm_vbo;
-	jds::vertex_buffer_object *slow_vert_vbo, *slow_norm_vbo;
+
+	GLuint fast_vertex_vbo;
+	GLuint fast_normal_vbo;
+
 	Eigen::Vector3f Ka, Ks, Kd;
 	float shininess;
 	

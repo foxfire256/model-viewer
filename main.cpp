@@ -20,13 +20,13 @@ extern "C"
 
 namespace po = boost::program_options;
 
+#include <Eigen/Core>
 #include <SDL2/SDL.h>
 
 #include "events/manager.hpp"
 #include "main_observer.hpp"
 #include "events/console_writer.hpp"
 #include "sdl_message_handler.hpp"
-#include "jds_eigen_info.hpp"
 #include "events/manager.hpp"
 #include "gui/gfx_sdl.hpp"
 
@@ -100,7 +100,8 @@ int main(int argc, char **argv)
 		data_root = vm["data-root"].as<std::string>();
 	}
 
-	jds::print_eigen_version();
+	printf("Eigen version: %d.%d.%d\n", EIGEN_WORLD_VERSION,
+		EIGEN_MAJOR_VERSION, EIGEN_MINOR_VERSION);
 	
 	// create an events manager first
 	em = new events::manager();

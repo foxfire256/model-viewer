@@ -6,12 +6,10 @@
 #include "events/message_framerate.hpp"
 
 #include "fox/counter.hpp"
-#include "jds_font_sdl.hpp"
-#include "jds_gl_glew.h"
+#include "fox/gfx/opengl_error_checker.h"
 #include "jds_shader.hpp"
-#include "jds_eigen_opengl.hpp"
+#include "fox/gfx/eigen_opengl.hpp"
 #include "jds_obj_model.h"
-#include "jds_vertex_buffer_object.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -50,14 +48,6 @@ gfx_sdl::~gfx_sdl()
 		delete fps_counter;
 	if(s)
 		delete s;
-	if(fast_vert_vbo)
-		delete fast_vert_vbo;
-	if(fast_norm_vbo)
-		delete fast_norm_vbo;
-	if(slow_vert_vbo)
-		delete slow_vert_vbo;
-	if(slow_norm_vbo)
-		delete slow_norm_vbo;
 	if(mesh)
 	{
 		jds_obj_model_free(mesh);
@@ -74,8 +64,7 @@ void gfx_sdl::resize(int w, int h)
 	win_h = h;
 	
 	glViewport(0, 0, win_w, win_h);
-	jds::perspective(65.0f, (float)win_w / (float)win_h, 0.01f, 40.0f, P);
-	//jds::ortho(0.0f, (float)win_w, 0.0f, (float)win_h, -10.0f, 10.0f, P);
+	fox::gfx::perspective(65.0f, (float)win_w / (float)win_h, 0.01f, 40.0f, P);
 	
 	MVP = P * MV;
 
@@ -90,9 +79,12 @@ void gfx_sdl::resize(int w, int h)
 void gfx_sdl::init_gl(int w, int h)
 {
 	// GL init
-	jds_start_gl();
+	start_glew();
 	print_opengl_error();
 	print_opengl_info();
+
+	fast_vertex_vbo = 0;
+	fast_normal_vbo = 0;
 	
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -117,7 +109,7 @@ void gfx_sdl::init_gl(int w, int h)
 	target = Eigen::Vector3f(0.0f, 0.0f, 0.0f);
 	up = Eigen::Vector3f(0.0f, 1.0f, 0.0f);
 
-	jds::look_at(eye, target, up, V);
+	fox::gfx::look_at(eye, target, up, V);
 	
 	// initialize some defaults
 	color = Eigen::Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -129,7 +121,7 @@ void gfx_sdl::init_gl(int w, int h)
 	scale = 1.0f;
 	light_pos = Eigen::Vector4f(eye[0], eye[1], eye[2], 1.0f);
 	M = Eigen::Matrix4f::Identity();
-	jds::perspective(65.0f, (float)w / (float)h, 0.01f, 40.0f, P);
+	fox::gfx::perspective(65.0f, (float)w / (float)h, 0.01f, 40.0f, P);
 	
 	MV = V * M;
 
@@ -217,21 +209,16 @@ void gfx_sdl::init_gl(int w, int h)
 	
 	print_opengl_error();
 	
-	fast_vert_vbo = new jds::vertex_buffer_object();
-	fast_vert_vbo->init(1, 3, mesh->vert_count, GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-		mesh->v);
-	fast_norm_vbo = new jds::vertex_buffer_object();
-	fast_norm_vbo->init(3, 3, mesh->vert_count, GL_ARRAY_BUFFER, GL_STATIC_DRAW,
-		mesh->vn);
-	slow_vert_vbo = new jds::vertex_buffer_object();
-	slow_vert_vbo->init(1, 3, mesh->vert_count, GL_ARRAY_BUFFER, GL_STREAM_DRAW,
-		mesh->v);
-	slow_norm_vbo = new jds::vertex_buffer_object();
-	slow_norm_vbo->init(3, 3, mesh->vert_count, GL_ARRAY_BUFFER, GL_STREAM_DRAW,
-		mesh->vn);
-	
+	glGenBuffers(1, &fast_vertex_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, fast_vertex_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * mesh->vert_count * 3,
+		mesh->v, GL_STATIC_DRAW);
+	glGenBuffers(1, &fast_normal_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, fast_normal_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * mesh->vert_count * 3,
+		mesh->vn, GL_STATIC_DRAW);
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
 
 	print_opengl_error();
 
@@ -245,11 +232,12 @@ void gfx_sdl::init(int w, int h, const std::string &data_root)
 	win_h = h;
 	this->data_root = data_root;
 	
+
+	
 	// start SDL and create the window
 	init_sdl("model-viewer");
 	
 	print_sdl_version();
-	
 
 	this->resize(win_w, win_h);
 
@@ -300,13 +288,11 @@ void gfx_sdl::render()
 	s->set_uniform("MV", MV);
 	s->set_uniform("normal_matrix", normal_matrix);
 
-	fast_vert_vbo->use();
-	//slow_vert_vbo->use();
+	glBindBuffer(GL_ARRAY_BUFFER, fast_vertex_vbo);
 	glEnableVertexAttribArray(s->vertex);
 	glVertexAttribPointer(s->vertex, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	fast_norm_vbo->use();
-	//slow_norm_vbo->use();
+	glBindBuffer(GL_ARRAY_BUFFER, fast_normal_vbo);
 	glEnableVertexAttribArray(s->normal);
 	glVertexAttribPointer(s->normal, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
@@ -429,6 +415,11 @@ void gfx_sdl::init_sdl(const std::string &window_name)
 //------------------------------------------------------------------------------
 void gfx_sdl::deinit_sdl()
 {
+	if(fast_vertex_vbo)
+		glDeleteBuffers(1, &fast_vertex_vbo);
+	if(fast_normal_vbo)
+		glDeleteBuffers(1, &fast_normal_vbo);
+	
 	if(renderer)
 		SDL_DestroyRenderer(renderer);
 	if(window)
