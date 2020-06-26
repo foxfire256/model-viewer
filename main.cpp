@@ -1,3 +1,13 @@
+// hacks for NVidia Optimus
+// 1 use NVidia, 0 don't unless maybe you set it as default
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+extern "C"
+{
+	__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+}
+#endif
+
 #include <iostream>
 
 #include <boost/version.hpp>
