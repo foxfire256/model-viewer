@@ -300,13 +300,13 @@ void gfx_sdl::render()
 	s->set_uniform("MV", MV);
 	s->set_uniform("normal_matrix", normal_matrix);
 
-	//fast_vert_vbo->use();
-	slow_vert_vbo->use();
+	fast_vert_vbo->use();
+	//slow_vert_vbo->use();
 	glEnableVertexAttribArray(s->vertex);
 	glVertexAttribPointer(s->vertex, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	//fast_norm_vbo->use();
-	slow_norm_vbo->use();
+	fast_norm_vbo->use();
+	//slow_norm_vbo->use();
 	glEnableVertexAttribArray(s->normal);
 	glVertexAttribPointer(s->normal, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
@@ -403,7 +403,7 @@ void gfx_sdl::init_sdl(const std::string &window_name)
 	SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 1);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
 			SDL_GL_CONTEXT_PROFILE_CORE);
 

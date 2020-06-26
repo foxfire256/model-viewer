@@ -110,18 +110,9 @@ if(APPLE)
 	set(GUI_LIBS ${SDL2_LIBS} -lSDL2_ttf ${OPENGL_LIBRARY} ${GLEW_LIBRARIES})
 	set(SOUND_LIBS -lSDL2_mixer -lvorbis -logg -lz)
 
-	# If there are problems with qt5 on Apple run 'which qmake' and make sure
-	# it is the correct one. Usually you have to run 'brew link qt5 --force'.
-	# Anaconda causes problems too since it has qt4 and other libs.
-	set(CMAKE_PREFIX_PATH "/usr/local/Cellar/qt5/5.6.1")
-	set(CMAKE_INCLUDE_PATH "/usr/local/Cellar/qt5/5.6.1/include")
-	set(CMAKE_LIBRARY_PATH "/usr/local/Cellar/qt5/5.6.1/lib")
-	find_package(Qt5Core)
-	find_package(Qt5Widgets)
 	set(CMAKE_PREFIX_PATH "/usr/local")
 	set(CMAKE_INCLUDE_PATH "/usr/local/include")
 	set(CMAKE_LIBRARY_PATH "/usr/local/lib")
-	include_directories("/usr/local/Cellar/qt5/5.6.1/include")
 
 	set(EDITOR_LIBS -L/usr/local/Cellar/qt5/5.6.1/lib)
 	
@@ -166,18 +157,11 @@ endif(UNIX AND NOT APPLE)
 
 
 if(NOT MSVC)
-	# better optimizations
-	# -O3 still IEEE754 compliant
-	# -Ofast not IEEE754 compliant, faster than -O3
-	# -ffast-math not needed with -Ofast
-	# -ftree-vectorize not sure how well this does
-	# -mavx
-	# -mavx2
 	set(CMAKE_C_FLAGS_RELEASE "-Ofast")
 	set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
 	
 	# enable C11/C++14 for gcc and clang
-	set(EXTRA_CXX_FLAGS "-std=c++14 -Wno-deprecated-declarations")
+	set(EXTRA_CXX_FLAGS "-std=c++17 -Wno-deprecated-declarations")
 	set(EXTRA_C_FLAGS "-std=c11 -Wno-deprecated-declarations")
 	
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_C_FLAGS}")
@@ -253,22 +237,11 @@ set(GUI_SOURCE
 add_executable(${PROJECT_NAME} ${MAIN_SOURCE} ${COMMON_EVENTS_SOURCE} ${COMMON_GUI_SOURCE} ${GUI_SOURCE})
 target_link_libraries(${PROJECT_NAME} ${LIBS} ${GUI_LIBS} ${BOOST_LIBS} ${PNG_LIBRARIES})
 
-# Instruct CMake to run Qt moc automatically when needed.
-#set(CMAKE_AUTOMOC ON)
-#add_executable(${PROJECT_NAME}_config_editor ${CONFIG_EDITOR_SOURCE})
-#target_link_libraries(${PROJECT_NAME}_config_editor
-#	${LBIS} ${EDITOR_LIBS} Qt5::Core Qt5::Widgets gcore)
-#set(CMAKE_AUTOMOC OFF)
-
+if(MSVC)
+	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+endif(MSVC)
 
 MESSAGE( STATUS "MINGW: " ${MINGW} )
 MESSAGE( STATUS "MSYS: " ${MSYS} )
 MESSAGE( STATUS "MSVC: " ${MSVC} )
 MESSAGE( STATUS "APPLE: " ${APPLE} )
-MESSAGE( STATUS "INCLUDE_DIRECTORIES: " ${INCLUDE_DIRECTORIES} )
-MESSAGE( STATUS "CMAKE_C_FLAGS: " ${CMAKE_C_FLAGS} )
-MESSAGE( STATUS "CMAKE_C_FLAGS_DEBUG: " ${CMAKE_C_FLAGS_DEBUG} )
-MESSAGE( STATUS "CMAKE_C_FLAGS_RELEASE: " ${CMAKE_C_FLAGS_RELEASE} )
-MESSAGE( STATUS "CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS} )
-MESSAGE( STATUS "CMAKE_CXX_FLAGS_DEBUG: " ${CMAKE_CXX_FLAGS_DEBUG} )
-MESSAGE( STATUS "CMAKE_CXX_FLAGS_RELEASE: " ${CMAKE_CXX_FLAGS_RELEASE} )
