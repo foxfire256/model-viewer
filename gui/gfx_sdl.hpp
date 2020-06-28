@@ -18,13 +18,6 @@ namespace fox::gfx
 	class model_loader_obj;
 }
 
-namespace jds
-{
-	class shader;
-	class vertex_buffer_object;
-}
-struct JDS_OBJ_MODEL;
-
 /**
  * @brief This handles SDL intialization and window creation
  */
@@ -63,12 +56,17 @@ protected:
 	Eigen::Vector3f rot, trans;
 	float scale;
 	
-	jds::shader *s;
-	//struct JDS_OBJ_MODEL *mesh;
 	fox::gfx::model_loader_obj *obj;
 
 	GLuint fast_vertex_vbo;
 	GLuint fast_normal_vbo;
+
+	GLuint shader_id;
+	GLuint vertex_shader_id;
+	GLuint fragment_shader_id;
+
+	GLint vertex_location;
+	GLint normal_location;
 
 	Eigen::Vector3f Ka, Ks, Kd;
 	float shininess;
@@ -89,6 +87,8 @@ protected:
 	virtual void resize(int w, int h);
 
 	void init_gl(int w, int h);
+
+	void print_shader_info_log(GLuint shader_id);
 	
 private:
 	uint32_t default_vao;

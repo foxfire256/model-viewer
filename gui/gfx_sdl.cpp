@@ -7,9 +7,7 @@
 
 #include "fox/counter.hpp"
 #include "fox/gfx/opengl_error_checker.h"
-#include "jds_shader.hpp"
 #include "fox/gfx/eigen_opengl.hpp"
-#include "jds_obj_model.h"
 #include "fox/gfx/model_loader_obj.hpp"
 
 #include <Eigen/Core>
@@ -33,9 +31,7 @@ gfx_sdl::gfx_sdl(events::manager_interface *emi)
 	
 	fps_counter = new fox::counter();
 	update_counter = new fox::counter();
-	s = NULL;
 	obj = nullptr;
-	//mesh = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -48,15 +44,6 @@ gfx_sdl::~gfx_sdl()
 		delete update_counter;
 	if(fps_counter)
 		delete fps_counter;
-	if(s)
-		delete s;
-	/*
-	if(mesh)
-	{
-		jds_obj_model_free(mesh);
-		free(mesh);
-	}
-	*/
 
 	delete obj;
 
@@ -74,10 +61,11 @@ void gfx_sdl::resize(int w, int h)
 	
 	MVP = P * MV;
 
-	if(s)
+	if(shader_id)
 	{
-		s->use();
-		s->set_uniform("MVP", MVP);
+		glUseProgram(shader_id);
+		int u = glGetUniformLocation(shader_id, "MVP");
+		glUniformMatrix4fv(u, 1, GL_FALSE, MVP.data());
 	}
 }
 
@@ -151,43 +139,166 @@ void gfx_sdl::init_gl(int w, int h)
 	snprintf(vert_file, 256, "%s/shaders/smooth_ads_twoside_v150.vert", data_root.c_str());
 	snprintf(frag_file, 256, "%s/shaders/smooth_ads_twoside_v150.frag", data_root.c_str());
 
-	s = new jds::shader();
-	s->name = "smooth_ads_v150";
-	s->load_pair(vert_file, frag_file);
+	FILE *v, *f;
+	char *vert, *frag;
+	int fsize, vsize, result;
 
-	s->use();
-	s->vertex = glGetAttribLocation(s->id, "vertex");
-	s->normal = glGetAttribLocation(s->id, "normal");
-	
-	s->set_uniform("light_pos", light_pos);
-	s->set_uniform("La", La);
-	s->set_uniform("Ls", Ls);
-	s->set_uniform("Ld", Ld);
-	
-	s->set_uniform("color", color);
+	v = fopen(vert_file, "rt");
+	if(v == NULL)
+	{
+		printf("ERROR couldn't open vertex shader file %s\n", vert_file);
+		return;
+	}
 
-	s->set_uniform("MVP", MVP);
-	s->set_uniform("MV", MV);
-	s->set_uniform("normal_matrix", normal_matrix);
+	f = fopen(frag_file, "rt");
+	if(f == NULL)
+	{
+		printf("ERROR couldn't open vertex shader file %s\n", frag_file);
+		return;
+	}
+
+	// find the file size
+	fseek(v, 0, SEEK_END);
+	vsize = ftell(v);
+	rewind(v);
+
+	fseek(f, 0, SEEK_END);
+	fsize = ftell(f);
+	rewind(f);
+
+	vert = (char *)malloc(sizeof(char) * vsize);
+	frag = (char *)malloc(sizeof(char) * fsize);
+
+	// read the file
+	result = (int)fread(vert, sizeof(char), vsize, v);
+	vert[vsize - 1] = '\0';
+	if(result != vsize)
+	{
+		printf("ERROR: loading shader: %s\n", vert_file);
+		printf("Expected %d bytes but only read %d\n", vsize, result);
+
+		fclose(f);
+		fclose(v);
+		free(vert);
+		free(frag);
+		return;
+	}
+
+	result = (int)fread(frag, sizeof(char), fsize, f);
+	frag[fsize - 1] = '\0';
+	if(result != fsize)
+	{
+		printf("ERROR: loading shader: %s\n", frag_file);
+		printf("Expected %d bytes but only read %d\n", fsize, result);
+
+		fclose(f);
+		fclose(v);
+		free(vert);
+		free(frag);
+		return;
+	}
+
+	fclose(f);
+	fclose(v);
+
+	int length = 0, chars_written = 0;
+	char *info_log;
+
+	// vertex shader first
+	vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
+	if(vertex_shader_id == 0)
+	{
+		printf("Failed to create GL_VERTEX_SHADER!\n");
+		return;
+	}
+
+	glShaderSource(vertex_shader_id, 1, &vert, NULL);
+	glCompileShader(vertex_shader_id);
+
+	print_shader_info_log(vertex_shader_id);
+
+	fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
+	if(fragment_shader_id == 0)
+	{
+		printf("Failed to create GL_FRAGMENT_SHADER!\n");
+		return;
+	}
+
+	glShaderSource(fragment_shader_id, 1, &frag, NULL);
+	glCompileShader(fragment_shader_id);
+
+	print_shader_info_log(fragment_shader_id);
+
+	shader_id = glCreateProgram();
+	if(shader_id == 0)
+	{
+		printf("Failed at glCreateProgram()!\n");
+		return;
+	}
+
+	glAttachShader(shader_id, vertex_shader_id);
+	glAttachShader(shader_id, fragment_shader_id);
+
+	glLinkProgram(shader_id);
+
+	glGetProgramiv(shader_id, GL_INFO_LOG_LENGTH, &length);
+
+	// use 2 for the length because NVidia cards return a line feed always
+	if(length > 4)
+	{
+		info_log = (char *)malloc(sizeof(char) * length);
+		if(info_log == NULL)
+		{
+			printf("ERROR couldn't allocate %d bytes for shader program info log!\n",
+				length);
+			return;
+		}
+		else
+		{
+			printf("Shader program info log:\n");
+		}
+
+		glGetProgramInfoLog(shader_id, length, &chars_written, info_log);
+
+		printf("%s\n", info_log);
+
+		free(info_log);
+	}
+
+	free(vert);
+	free(frag);
+
+	glUseProgram(shader_id);
+	vertex_location = glGetAttribLocation(shader_id, "vertex");
+	normal_location = glGetAttribLocation(shader_id, "normal");
+	
+	int u = glGetUniformLocation(shader_id, "light_pos");
+	glUniform4fv(u, 1, light_pos.data());
+	u = glGetUniformLocation(shader_id, "La");
+	glUniform3fv(u, 1, La.data());
+	u = glGetUniformLocation(shader_id, "Ls");
+	glUniform3fv(u, 1, Ls.data());
+	u = glGetUniformLocation(shader_id, "Ld");
+	glUniform3fv(u, 1, Ld.data());
+
+	u = glGetUniformLocation(shader_id, "color");
+	glUniform4fv(u, 1, color.data());
+
+	u = glGetUniformLocation(shader_id, "MVP");
+	glUniformMatrix4fv(u, 1, GL_FALSE, MVP.data());
+	u = glGetUniformLocation(shader_id, "MV");
+	glUniformMatrix4fv(u, 1, GL_FALSE, MV.data());
+	u = glGetUniformLocation(shader_id, "normal_matrix");
+	glUniformMatrix3fv(u, 1, GL_FALSE, normal_matrix.data());
 
 	print_opengl_error();
 
-	char mesh_file[128];
 	// blade1, bunny, dragon3, icosphere2
-	snprintf(mesh_file, 128, "%s/meshes/dragon3.obj", data_root.c_str());
-	//m = new jds::mesh_obj();
-	//m->load(mesh_file);
-	/*
-	mesh = (JDS_OBJ_MODEL *)malloc(sizeof(JDS_OBJ_MODEL));
-	jds_obj_model_load(mesh_file, mesh);
-	if(jds_obj_model_check_arrays(mesh))
-		jds_obj_model_gl_arrays(mesh);
-	jds_obj_model_print_info(mesh);
-	*/
+	std::string model_file = data_root + "/meshes/dragon3.obj";
 	obj = new fox::gfx::model_loader_obj();
-	if(obj->load(std::string(mesh_file)))
+	if(obj->load(model_file))
 	{
-		std::cerr << "Failed to load mesh: " << mesh_file << std::endl;
+		std::cerr << "Failed to load mesh: " << model_file << std::endl;
 		exit(-1);
 	}
 
@@ -196,33 +307,20 @@ void gfx_sdl::init_gl(int w, int h)
 		(1024 * 1024));
 	printf("Normal data takes up %.3f MB\n", (float)obj->vertex_count_ogl * 12 /
 		(1024 * 1024));
-		
-	// see if we have a material file to load uniforms from
-	/*
-	if(mesh->mtl)
-	{
-		Ka = Eigen::Vector3f(mesh->mtl->Ka[0], mesh->mtl->Ka[1], mesh->mtl->Ka[2]);
-		Ks = Eigen::Vector3f(mesh->mtl->Ks[0], mesh->mtl->Ks[1], mesh->mtl->Ks[2]);
-		Kd = Eigen::Vector3f(mesh->mtl->Kd[0], mesh->mtl->Kd[1], mesh->mtl->Kd[2]);
-		// TODO: make sure Ns is what we want for shininess
-		shininess = mesh->mtl->Ns;
-
-		//this->texture_filename = m->mtl->texture_filename;
-	}
-	// otherwise create some defaults at least
-	else
-	{
-	*/
-		Ka = Eigen::Vector3f(0.3f, 0.3f, 0.3f);
-		Ks = Eigen::Vector3f(0.1f, 0.1f, 0.1f);
-		Kd = Eigen::Vector3f(0.6f, 0.6f, 0.6f);
-		shininess = 5.0f;
-	//}
 	
-	s->set_uniform("shininess", shininess);
-	s->set_uniform("Ka", Ka);
-	s->set_uniform("Ks", Ks);
-	s->set_uniform("Kd", Kd);
+	Ka = Eigen::Vector3f(0.3f, 0.3f, 0.3f);
+	Ks = Eigen::Vector3f(0.1f, 0.1f, 0.1f);
+	Kd = Eigen::Vector3f(0.6f, 0.6f, 0.6f);
+	shininess = 5.0f;
+
+	u = glGetUniformLocation(shader_id, "Ka");
+	glUniform3fv(u, 1, Ka.data());
+	u = glGetUniformLocation(shader_id, "Ks");
+	glUniform3fv(u, 1, Ks.data());
+	u = glGetUniformLocation(shader_id, "Kd");
+	glUniform3fv(u, 1, Kd.data());
+	u = glGetUniformLocation(shader_id, "shininess");
+	glUniform1f(u, shininess);
 	
 	print_opengl_error();
 	
@@ -248,8 +346,6 @@ void gfx_sdl::init(int w, int h, const std::string &data_root)
 	win_w = w;
 	win_h = h;
 	this->data_root = data_root;
-	
-
 	
 	// start SDL and create the window
 	init_sdl("model-viewer");
@@ -299,19 +395,22 @@ void gfx_sdl::render()
 
 	MVP = P * MV;
 
-	s->use();
+	glUseProgram(shader_id);
 
-	s->set_uniform("MVP", MVP);
-	s->set_uniform("MV", MV);
-	s->set_uniform("normal_matrix", normal_matrix);
+	int u = glGetUniformLocation(shader_id, "MVP");
+	glUniformMatrix4fv(u, 1, GL_FALSE, MVP.data());
+	u = glGetUniformLocation(shader_id, "MV");
+	glUniformMatrix4fv(u, 1, GL_FALSE, MV.data());
+	u = glGetUniformLocation(shader_id, "normal_matrix");
+	glUniformMatrix3fv(u, 1, GL_FALSE, normal_matrix.data());
 
 	glBindBuffer(GL_ARRAY_BUFFER, fast_vertex_vbo);
-	glEnableVertexAttribArray(s->vertex);
-	glVertexAttribPointer(s->vertex, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(vertex_location);
+	glVertexAttribPointer(vertex_location, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, fast_normal_vbo);
-	glEnableVertexAttribArray(s->normal);
-	glVertexAttribPointer(s->normal, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(normal_location);
+	glVertexAttribPointer(normal_location, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glDrawArrays(GL_TRIANGLES, 0, obj->vertex_count_ogl);
 
@@ -350,32 +449,9 @@ void gfx_sdl::init_sdl(const std::string &window_name)
 		exit(1);
 	}
 
-	// WARNING: OpenGL was disabled since this code uses the SDL renderer
-#ifdef __ANDROID__
-	window = SDL_CreateWindow(window_title.c_str(), SDL_WINDOWPOS_UNDEFINED,
-		SDL_WINDOWPOS_UNDEFINED, win_w, win_h,
-		SDL_WINDOW_RESIZABLE | SDL_WINDOW_BORDERLESS);
-#elif __APPLE__
-#include "TargetConditionals.h"
-#if TARGET_OS_IPHONE
-	window = SDL_CreateWindow(window_title.c_str(), SDL_WINDOWPOS_UNDEFINED,
-		SDL_WINDOWPOS_UNDEFINED, win_w, win_h,
-		SDL_WINDOW_RESIZABLE | SDL_WINDOW_BORDERLESS);
-	#elif TARGET_IPHONE_SIMULATOR
-		// iOS Simulator
-	#elif TARGET_OS_MAC
-	// Other kinds of Mac OS
 	window = SDL_CreateWindow(window_title.c_str(), SDL_WINDOWPOS_UNDEFINED,
 			SDL_WINDOWPOS_UNDEFINED, win_w, win_h,
 			SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-#else
-		// Unsupported platform
-	#endif
-#else
-	window = SDL_CreateWindow(window_title.c_str(), SDL_WINDOWPOS_UNDEFINED,
-			SDL_WINDOWPOS_UNDEFINED, win_w, win_h,
-			SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-#endif
 
 	if(!window)
 	{
@@ -470,7 +546,6 @@ void gfx_sdl::print_sdl_version()
 	SDL_version compiled;
 	SDL_version linked;
 
-
 	SDL_VERSION(&compiled);
 	SDL_GetVersion(&linked);
 	printf("SDL compiled version %d.%d.%d\n",
@@ -479,3 +554,31 @@ void gfx_sdl::print_sdl_version()
 		linked.major, linked.minor, linked.patch);
 	printf("SDL revision number: %d\n", SDL_GetRevisionNumber());
 }
+
+//------------------------------------------------------------------------------
+void gfx_sdl::print_shader_info_log(GLuint shader_id)
+{
+	int length = 0, chars_written = 0;
+	char *info_log;
+
+	glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &length);
+
+	// use 2 for the length because NVidia cards return a line feed always
+	if(length > 4)
+	{
+		info_log = (char *)malloc(sizeof(char) * length);
+		if(info_log == NULL)
+		{
+			printf("ERROR couldn't allocate %d bytes for shader info log!\n",
+				length);
+			return;
+		}
+
+		glGetShaderInfoLog(shader_id, length, &chars_written, info_log);
+
+		printf("Shader info log: %s\n", info_log);
+
+		free(info_log);
+	}
+}
+

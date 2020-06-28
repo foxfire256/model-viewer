@@ -124,10 +124,6 @@ set(COMMON_GUI_SOURCE
 	../common-cpp/fox/counter.cpp
 	../common-cpp/fox/gfx/eigen_opengl.hpp
 	../common-cpp/fox/gfx/eigen_opengl.cpp
-	../common-cpp-old/jds_obj_model.h
-	../common-cpp-old/jds_obj_model.c
-	../common-cpp-old/jds_shader.hpp
-	../common-cpp-old/jds_shader.cpp
 	../common-cpp/fox/gfx/gl_glew.h
 	../common-cpp/fox/gfx/gl_glew.c
 	../common-cpp/fox/gfx/opengl_error_checker.h
