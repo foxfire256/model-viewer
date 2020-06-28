@@ -13,6 +13,10 @@ namespace fox
 {
 	class counter;
 }
+namespace fox::gfx
+{
+	class model_loader_obj;
+}
 
 namespace jds
 {
@@ -60,7 +64,8 @@ protected:
 	float scale;
 	
 	jds::shader *s;
-	struct JDS_OBJ_MODEL *mesh;
+	//struct JDS_OBJ_MODEL *mesh;
+	fox::gfx::model_loader_obj *obj;
 
 	GLuint fast_vertex_vbo;
 	GLuint fast_normal_vbo;

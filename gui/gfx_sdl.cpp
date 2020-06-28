@@ -10,6 +10,7 @@
 #include "jds_shader.hpp"
 #include "fox/gfx/eigen_opengl.hpp"
 #include "jds_obj_model.h"
+#include "fox/gfx/model_loader_obj.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -33,7 +34,8 @@ gfx_sdl::gfx_sdl(events::manager_interface *emi)
 	fps_counter = new fox::counter();
 	update_counter = new fox::counter();
 	s = NULL;
-	mesh = NULL;
+	obj = nullptr;
+	//mesh = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -48,11 +50,15 @@ gfx_sdl::~gfx_sdl()
 		delete fps_counter;
 	if(s)
 		delete s;
+	/*
 	if(mesh)
 	{
 		jds_obj_model_free(mesh);
 		free(mesh);
 	}
+	*/
+
+	delete obj;
 
 	deinit_sdl();
 }
@@ -171,18 +177,28 @@ void gfx_sdl::init_gl(int w, int h)
 	snprintf(mesh_file, 128, "%s/meshes/dragon3.obj", data_root.c_str());
 	//m = new jds::mesh_obj();
 	//m->load(mesh_file);
+	/*
 	mesh = (JDS_OBJ_MODEL *)malloc(sizeof(JDS_OBJ_MODEL));
 	jds_obj_model_load(mesh_file, mesh);
 	if(jds_obj_model_check_arrays(mesh))
 		jds_obj_model_gl_arrays(mesh);
 	jds_obj_model_print_info(mesh);
-	printf("Model has %d verticies\n", mesh->vert_count);
-	printf("Vertex data takes up %.3f MB\n", (float)mesh->vert_count * 12 /
+	*/
+	obj = new fox::gfx::model_loader_obj();
+	if(obj->load(std::string(mesh_file)))
+	{
+		std::cerr << "Failed to load mesh: " << mesh_file << std::endl;
+		exit(-1);
+	}
+
+	printf("Model has %d verticies\n", obj->vertex_count_ogl);
+	printf("Vertex data takes up %.3f MB\n", (float)obj->vertex_count_ogl * 12 /
 		(1024 * 1024));
-	printf("Normal data takes up %.3f MB\n", (float)mesh->vert_count * 12 /
+	printf("Normal data takes up %.3f MB\n", (float)obj->vertex_count_ogl * 12 /
 		(1024 * 1024));
 		
 	// see if we have a material file to load uniforms from
+	/*
 	if(mesh->mtl)
 	{
 		Ka = Eigen::Vector3f(mesh->mtl->Ka[0], mesh->mtl->Ka[1], mesh->mtl->Ka[2]);
@@ -196,11 +212,12 @@ void gfx_sdl::init_gl(int w, int h)
 	// otherwise create some defaults at least
 	else
 	{
+	*/
 		Ka = Eigen::Vector3f(0.3f, 0.3f, 0.3f);
 		Ks = Eigen::Vector3f(0.1f, 0.1f, 0.1f);
 		Kd = Eigen::Vector3f(0.6f, 0.6f, 0.6f);
 		shininess = 5.0f;
-	}
+	//}
 	
 	s->set_uniform("shininess", shininess);
 	s->set_uniform("Ka", Ka);
@@ -211,12 +228,12 @@ void gfx_sdl::init_gl(int w, int h)
 	
 	glGenBuffers(1, &fast_vertex_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, fast_vertex_vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * mesh->vert_count * 3,
-		mesh->v, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * obj->vertex_count_ogl * 3,
+		obj->vertices_ogl.data(), GL_STATIC_DRAW);
 	glGenBuffers(1, &fast_normal_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, fast_normal_vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * mesh->vert_count * 3,
-		mesh->vn, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * obj->normal_count_ogl * 3,
+		obj->normals_ogl.data(), GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -296,7 +313,7 @@ void gfx_sdl::render()
 	glEnableVertexAttribArray(s->normal);
 	glVertexAttribPointer(s->normal, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	glDrawArrays(GL_TRIANGLES, 0, mesh->vert_count);
+	glDrawArrays(GL_TRIANGLES, 0, obj->vertex_count_ogl);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 

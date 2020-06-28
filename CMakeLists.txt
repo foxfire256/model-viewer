@@ -132,6 +132,8 @@ set(COMMON_GUI_SOURCE
 	../common-cpp/fox/gfx/gl_glew.c
 	../common-cpp/fox/gfx/opengl_error_checker.h
 	../common-cpp/fox/gfx/opengl_error_checker.c
+	../common-cpp/fox/gfx/model_loader_obj.hpp
+	../common-cpp/fox/gfx/model_loader_obj.cpp
 )
 set(COMMON_EVENTS_SOURCE
 	../common-cpp/events/console_writer.hpp
