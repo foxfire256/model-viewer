@@ -296,7 +296,7 @@ void gfx_sdl::init_gl(int w, int h)
 	// blade1, bunny, dragon3, icosphere2
 	std::string model_file = data_root + "/meshes/dragon3.obj";
 	obj = new fox::gfx::model_loader_obj();
-	if(obj->load(model_file))
+	if(obj->load_fast(model_file))
 	{
 		std::cerr << "Failed to load mesh: " << model_file << std::endl;
 		exit(-1);
