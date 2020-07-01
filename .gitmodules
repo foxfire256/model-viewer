@@ -1,0 +1,3 @@
+[submodule "common-cpp"]
+	path = common-cpp
+	url = ssh://foxfire@foxfire256.ddns.net:27730/nas/dev/common-cpp

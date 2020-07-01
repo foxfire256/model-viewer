@@ -1,12 +1,10 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.6)
+# cmake version 3.6 is required for Visual Studio startup project
 project(model-viewer)
-
-# http://www.cmake.org/Wiki/CMake_Useful_Variables
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-include_directories("../common-cpp")
-include_directories("../common-cpp-old")
+include_directories("common-cpp")
 
 # cmake .. -G "Visual Studio 16 2019" -A x64
 if(MSVC)
@@ -120,37 +118,37 @@ set(MAIN_SOURCE
 	sdl_message_handler.cpp
 )
 set(COMMON_GUI_SOURCE
-	../common-cpp/fox/counter.hpp
-	../common-cpp/fox/counter.cpp
-	../common-cpp/fox/gfx/eigen_opengl.hpp
-	../common-cpp/fox/gfx/eigen_opengl.cpp
-	../common-cpp/fox/gfx/gl_glew.h
-	../common-cpp/fox/gfx/gl_glew.c
-	../common-cpp/fox/gfx/opengl_error_checker.h
-	../common-cpp/fox/gfx/opengl_error_checker.c
-	../common-cpp/fox/gfx/model_loader_obj.hpp
-	../common-cpp/fox/gfx/model_loader_obj.cpp
+	common-cpp/fox/counter.hpp
+	common-cpp/fox/counter.cpp
+	common-cpp/fox/gfx/eigen_opengl.hpp
+	common-cpp/fox/gfx/eigen_opengl.cpp
+	common-cpp/fox/gfx/gl_glew.h
+	common-cpp/fox/gfx/gl_glew.c
+	common-cpp/fox/gfx/opengl_error_checker.h
+	common-cpp/fox/gfx/opengl_error_checker.c
+	common-cpp/fox/gfx/model_loader_obj.hpp
+	common-cpp/fox/gfx/model_loader_obj.cpp
 )
 set(COMMON_EVENTS_SOURCE
-	../common-cpp/events/console_writer.hpp
-	../common-cpp/events/console_writer.cpp
-	../common-cpp/events/message_base.hpp
-	../common-cpp/events/message_info.hpp
-	../common-cpp/events/message_error.hpp
-	../common-cpp/events/manager_interface.hpp
-	../common-cpp/events/manager.hpp
-	../common-cpp/events/manager.cpp
-	../common-cpp/events/message_framerate.hpp
-	../common-cpp/events/message_keydown.hpp
-	../common-cpp/events/message_keyup.hpp
-	../common-cpp/events/message_mousebutton.hpp
-	../common-cpp/events/message_mousemotion.hpp
-	../common-cpp/events/message_mousewheel.hpp
-	../common-cpp/events/message_resize.hpp
-	../common-cpp/events/observer.hpp
-	../common-cpp/events/observer.cpp
-	../common-cpp/events/subject.hpp
-	../common-cpp/events/subject.cpp
+	common-cpp/events/console_writer.hpp
+	common-cpp/events/console_writer.cpp
+	common-cpp/events/message_base.hpp
+	common-cpp/events/message_info.hpp
+	common-cpp/events/message_error.hpp
+	common-cpp/events/manager_interface.hpp
+	common-cpp/events/manager.hpp
+	common-cpp/events/manager.cpp
+	common-cpp/events/message_framerate.hpp
+	common-cpp/events/message_keydown.hpp
+	common-cpp/events/message_keyup.hpp
+	common-cpp/events/message_mousebutton.hpp
+	common-cpp/events/message_mousemotion.hpp
+	common-cpp/events/message_mousewheel.hpp
+	common-cpp/events/message_resize.hpp
+	common-cpp/events/observer.hpp
+	common-cpp/events/observer.cpp
+	common-cpp/events/subject.hpp
+	common-cpp/events/subject.cpp
 )
 
 set(GUI_SOURCE
