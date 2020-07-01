@@ -6,6 +6,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include_directories("common-cpp")
 
+# used this to add common-cpp as a submodule
+# git submodule add ssh://foxfire@foxfire256.ddns.net:27730/nas/dev/common-cpp common-cpp
+
 # cmake .. -G "Visual Studio 16 2019" -A x64
 if(MSVC)
 	set(CMAKE_PREFIX_PATH "C:\\vclibs\\vclibs")
@@ -156,8 +159,11 @@ set(GUI_SOURCE
 	gui/gfx_sdl.cpp
 )
 
-add_executable(${PROJECT_NAME} ${MAIN_SOURCE} ${COMMON_EVENTS_SOURCE} ${COMMON_GUI_SOURCE} ${GUI_SOURCE})
-target_link_libraries(${PROJECT_NAME} ${LIBS} ${GUI_LIBS} ${BOOST_LIBS} ${PNG_LIBRARIES})
+add_library(common_events ${LIBRARY_TYPE} ${COMMON_EVENTS_SOURCE})
+target_link_libraries(common_events ${LIBS} ${SDL2_LIBS})
+
+add_executable(${PROJECT_NAME} ${MAIN_SOURCE} ${COMMON_GUI_SOURCE} ${GUI_SOURCE})
+target_link_libraries(${PROJECT_NAME} ${LIBS} ${GUI_LIBS} ${BOOST_LIBS} common_events)
 
 if(MSVC)
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
