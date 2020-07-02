@@ -3,6 +3,7 @@
 *.bmp
 *.ttf
 build/*
+build2/*
 .idea/workspace.xml
 CMakeLists.txt.user
 *.autosave

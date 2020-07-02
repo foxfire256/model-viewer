@@ -65,9 +65,7 @@ if(MINGW OR MSYS)
 	set(BOOST_LIBS ${Boost_LIBRARIES})
 	set(LIBS ${LIBS} -lmingw32)
 	set(SDL2_LIBS -lSDL2main -lSDL2)
-	set(GUI_LIBS ${SDL2_LIBS} ${OPENGL_LIBRARY} ${GLEW_LIBRARIES})
-	
-	set(EDITOR_LIBS ${EDITOR_LIBS} -lmingw32)
+	set(GUI_LIBS ${SDL2_LIBS} ${OPENGL_LIBRARY} ${GLEW_LIBRARIES} -lglew32)
 	
 	include_directories("c:/msys64/mingw64/include/eigen3")
 endif(MINGW OR MSYS)
