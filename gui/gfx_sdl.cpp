@@ -137,8 +137,11 @@ void gfx_sdl::init_gl(int w, int h)
 	print_opengl_error();
 	
 	char vert_file[256], frag_file[256];
-	snprintf(vert_file, 256, "%s/shaders/smooth_ads_twoside_v150.vert", data_root.c_str());
-	snprintf(frag_file, 256, "%s/shaders/smooth_ads_twoside_v150.frag", data_root.c_str());
+	//snprintf(vert_file, 256, "%s/shaders/phong_v460.vert", data_root.c_str());
+	//snprintf(frag_file, 256, "%s/shaders/phong_v460.frag", data_root.c_str());
+
+	snprintf(vert_file, 256, "%s/shaders/gouraud_v460.vert", data_root.c_str());
+	snprintf(frag_file, 256, "%s/shaders/gouraud_v460.frag", data_root.c_str());
 
 	FILE *v, *f;
 	char *vert, *frag;
@@ -270,8 +273,8 @@ void gfx_sdl::init_gl(int w, int h)
 	free(frag);
 
 	glUseProgram(shader_id);
-	vertex_location = glGetAttribLocation(shader_id, "vertex");
-	normal_location = glGetAttribLocation(shader_id, "normal");
+	vertex_location = glGetAttribLocation(shader_id, "vertex_position");
+	normal_location = glGetAttribLocation(shader_id, "vertex_normal");
 	
 	int u = glGetUniformLocation(shader_id, "light_pos");
 	glUniform4fv(u, 1, light_pos.data());
@@ -308,6 +311,8 @@ void gfx_sdl::init_gl(int w, int h)
 		(1024 * 1024));
 	printf("Normal data takes up %.3f MB\n", (float)obj->vertex_count_ogl * 12 /
 		(1024 * 1024));
+
+	print_opengl_error();
 	
 	Ka = Eigen::Vector3f(0.3f, 0.3f, 0.3f);
 	Ks = Eigen::Vector3f(0.1f, 0.1f, 0.1f);
