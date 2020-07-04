@@ -140,8 +140,11 @@ void gfx_sdl::init_gl(int w, int h)
 	//snprintf(vert_file, 256, "%s/shaders/phong_v460.vert", data_root.c_str());
 	//snprintf(frag_file, 256, "%s/shaders/phong_v460.frag", data_root.c_str());
 
-	snprintf(vert_file, 256, "%s/shaders/gouraud_v460.vert", data_root.c_str());
-	snprintf(frag_file, 256, "%s/shaders/gouraud_v460.frag", data_root.c_str());
+	//snprintf(vert_file, 256, "%s/shaders/gouraud_v460.vert", data_root.c_str());
+	//snprintf(frag_file, 256, "%s/shaders/gouraud_v460.frag", data_root.c_str());
+
+	snprintf(vert_file, 256, "%s/shaders/gouraud_half_vector_v460.vert", data_root.c_str());
+	snprintf(frag_file, 256, "%s/shaders/gouraud_half_vector_v460.frag", data_root.c_str());
 
 	FILE *v, *f;
 	char *vert, *frag;
