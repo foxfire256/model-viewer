@@ -1,0 +1,4 @@
+[submodule "common-cpp"]
+	path = common-cpp
+	url = ssh://foxfire@foxfire256.ddns.net:27730/nas/dev/common-cpp
+	url = git@github.com:foxfire256/common-cpp.git
